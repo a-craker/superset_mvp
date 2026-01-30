@@ -1,0 +1,28 @@
+# docker compose down
+# docker compose build --no-cache
+# docker compose up 
+# docker exec -it superset_mvp python
+# docker compose up -d
+
+services:
+  superset:
+    build: .
+    image: superset-clickhouse:mvp
+    container_name: superset_mvp
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - superset_home:/app/superset_home
+    ports:
+      - "8088:8088"
+    networks:
+      - production
+
+volumes:
+  superset_home:
+
+
+networks:
+  production:
+    external: true

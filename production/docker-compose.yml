@@ -1,0 +1,73 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:7
+    container_name: superset_redis
+    restart: always
+    networks:
+      - production
+
+  db:
+    image: postgres:15
+    container_name: superset_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: superset
+      POSTGRES_USER: superset
+      POSTGRES_PASSWORD: superset
+    volumes:
+      - superset_db:/var/lib/postgresql/data
+    networks:
+      - production
+
+  superset:
+    build: .
+    image: superset-prod:latest
+    container_name: superset_app
+    restart: always
+    env_file:
+      - .env
+    environment:
+      SUPERSET_ROLE: web
+      SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
+    volumes:
+      - ./superset_config.py:/app/pythonpath/superset_config.py
+      - superset_home:/app/superset_home
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "8088:8088"
+    networks:
+      - production
+
+  superset-worker:
+    image: superset-prod:latest
+    container_name: superset_worker
+    restart: always
+    env_file:
+      - .env
+    environment:
+      SUPERSET_ROLE: worker
+      SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
+    volumes:
+      - ./superset_config.py:/app/pythonpath/superset_config.py
+      - superset_home:/app/superset_home
+    depends_on:
+      - db
+      - redis
+    networks:
+      - production
+
+  superset-beat:
+    image: superset-prod:latest
+    container_name: superset_beat
+    restart: always
+    env_file:
+      - .env
+    environment:
+      SUPERSET_ROLE: beat
+      SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
+    volumes:
+      - ./superset_config.py:/app/pythonpath/superset_config.p
