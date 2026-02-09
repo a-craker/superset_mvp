@@ -9,20 +9,16 @@ services:
     build: .
     image: superset-clickhouse:mvp
     container_name: superset_mvp
+    user: root
     restart: unless-stopped
     env_file:
       - .env
     volumes:
       - superset_home:/app/superset_home
+      - ./superset_config.py:/app/pythonpath/superset_config.py
     ports:
       - "8088:8088"
     networks:
       - production
-
-volumes:
-  superset_home:
-
-
-networks:
-  production:
-    external: true
+    # This must be at the same indentation level as 'ports' or 'volumes'
+    entrypoint: [ "sh", "-c", "chown -R superset:superset /app/superset_home && /entrypoint.sh" ]

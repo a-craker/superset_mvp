@@ -1,5 +1,7 @@
 version: "3.9"
 
+# example: https://superset.datatest.ch/dashboard/list/
+
 services:
   redis:
     image: redis:7
@@ -23,7 +25,7 @@ services:
 
   superset:
     build: .
-    image: superset-prod:latest
+    image: superset-prod:1.0.0
     container_name: superset_app
     restart: always
     env_file:

@@ -1,34 +1,27 @@
 import os
-from superset.db_engine_specs.clickhouse import ClickHouseEngineSpec
 
-DB_ENGINE_SPECS = {
-    "clickhouse": ClickHouseEngineSpec,
-}
+GUNICORN_WORKERS = int(os.getenv("SUPERSET_WORKERS", 2))
+SUPERSET_WEBSERVER_TIMEOUT = int(os.getenv("SUPERSET_TIMEOUT", 120))
+SUPERSET_WEBSERVER_ADDRESS = "0.0.0.0"
+SUPERSET_WEBSERVER_PORT = 8088
 
-SECRET_KEY = os.environ.get("SUPERSET_SECRET_KEY", "change-me")
+SECRET_KEY = os.getenv("SUPERSET_SECRET_KEY")
 
 SQLALCHEMY_DATABASE_URI = (
-    "postgresql+psycopg2://superset:superset@db:5432/superset"
+    f"postgresql+psycopg2://superset:{os.getenv('POSTGRES_PASSWORD')}@superset-db:5432/superset"
 )
 
-REDIS_HOST = "redis"
-REDIS_PORT = 6379
+REDIS_URL = "redis://superset-redis:6379/0"
+RATELIMIT_STORAGE_URI = "redis://superset-redis:6379/1"
 
 CACHE_CONFIG = {
     "CACHE_TYPE": "RedisCache",
-    "CACHE_DEFAULT_TIMEOUT": 300,
-    "CACHE_KEY_PREFIX": "superset_",
-    "CACHE_REDIS_HOST": REDIS_HOST,
-    "CACHE_REDIS_PORT": REDIS_PORT,
+    "CACHE_REDIS_URL": REDIS_URL,
 }
 
-DATA_CACHE_CONFIG = CACHE_CONFIG
+CELERY_CONFIG = {
+    "broker_url": REDIS_URL,
+    "result_backend": REDIS_URL,
+}
 
-class CeleryConfig:
-    broker_url = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
-    result_backend = f"redis://{REDIS_HOST}:{REDIS_PORT}/1"
-    imports = ("superset.sql_lab",)
-    worker_prefetch_multiplier = 1
-    task_acks_late = True
 
-CELERY_CONFIG = CeleryConfig
