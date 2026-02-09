@@ -14,6 +14,16 @@ SQLALCHEMY_DATABASE_URI = (
 REDIS_URL = "redis://superset-redis:6379/0"
 RATELIMIT_STORAGE_URI = "redis://superset-redis:6379/1"
 
+# 2. Disable HTML Sanitization to enable nav buttons
+HTML_SANITIZATION = False
+
+# 3. Allow specific attributes for nav bar in markdown
+HTML_SANITIZATION_ALLOWED_ATTRIBUTES = {
+    'a': ['href', 'title', 'target', 'style', 'class'],
+    'div': ['style', 'class'],
+    'span': ['style', 'class'],
+}
+
 CACHE_CONFIG = {
     "CACHE_TYPE": "RedisCache",
     "CACHE_REDIS_URL": REDIS_URL,
