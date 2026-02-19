@@ -67,4 +67,3 @@ The configuration file is tailored for a professional dashboard experience:
 
 ---
 
-**Would you like me to add a section on how to create the specific "View-Only" role permissions within the Superset UI?**
