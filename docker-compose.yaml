@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  superset:
+    build: .
+    container_name: superset_app
+    restart: always
+    env_file: .env
+    volumes:
+      - ./superset_config.py:/app/pythonpath/superset_config.py
+    networks:
+      - production
+    depends_on:
+      - superset-db
+      - superset-redis
+    ports:
+      - "8088:8088"
+
+  superset-db:
+    image: postgres:15
+    container_name: superset_db
+    restart: always
+    environment:
+      POSTGRES_DB: superset
+      POSTGRES_USER: superset
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    networks:
+      - production
+    volumes:
+      - superset_db_data:/var/lib/postgresql/data
+
+  superset-redis:
+    image: redis:7
+    container_name: superset_redis
+    restart: always
+    networks:
+      - production
+
+networks:
+  production:
+    external: true
+
+volumes:
+  superset_db_data:
