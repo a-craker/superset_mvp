@@ -1,6 +1,6 @@
 # Apache Superset Production Deployment
 
-This repository contains a production-ready deployment of Apache Superset, optimized for a 4-core server and integrated with a pre-existing ClickHouse data warehouse.
+This repository contains a production-ready deployment of Apache Superset, optimized for an X-core server and integrated with a pre-existing ClickHouse data warehouse.
 
 ## Project Structure
 
@@ -45,11 +45,12 @@ The deployment uses an `ensurepip` approach within the `Dockerfile` to inject th
 
 ## Gunicorn Settings & Purpose
 
-To handle production traffic on a 4-core server, Gunicorn is configured in `docker-entrypoint.sh` with the following parameters:
+To handle production traffic on a server with **X** cores the standard web formula for **workers** is **(2 \times X) + 1** as the maximum recommended allocation.
+Gunicorn is configured in `docker-entrypoint.sh`. We allow `superset_config.py` to handle the **application logic** and `docker-entrypoint.sh` the **process management**, hence why they are specified in `docker-entrypoint.sh` with the following parameters:
 
-* **`--workers 2`**: Specifies the number of independent processes. We use 2 to ensure we don't starve the CPU, leaving cores available for ClickHouse and Postgres.
+* **`--workers 2X + 1`**: Specifies the number of independent processes. We use this to ensure we don't starve the CPU, leaving cores available for other processes such as ClickHouse and Postgres.
 * **`--worker-class gthread`**: Enables a threaded worker model. Unlike "sync" workers, threads can handle "I/O wait" (waiting for ClickHouse to return data) without blocking the entire process.
-* **`--threads 4`**: Each worker handles 4 threads, providing a total of 8 concurrent request slots.
+* **`--threads 2`**: Each worker handles 2 threads, providing a total of **2 \times (2X + 1)** concurrent request slots.
 * **`--preload`**: Loads the application code in the master process before forking workers, which significantly reduces the RAM footprint on your server.
 * **`--timeout 300`**: Ensures that long-running data aggregations from ClickHouse don't cause the web server to kill the connection prematurely.
 
