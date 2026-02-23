@@ -1,33 +1,83 @@
-version: '3.8'
-
 services:
   superset:
     build: .
     container_name: superset_app
     restart: always
     env_file: .env
+    environment:
+      SUPERSET_ROLE: web
     volumes:
       - ./superset_config.py:/app/pythonpath/superset_config.py
+      - superset_home:/app/superset_home
     networks:
       - production
     depends_on:
-      - superset-db
-      - superset-redis
+      superset-db:
+        condition: service_healthy
+      superset-redis:
+        condition: service_healthy
     ports:
       - "8088:8088"
+
+  superset-worker:
+    healthcheck:
+      disable: true
+    build: .
+    container_name: superset_worker
+    restart: always
+    env_file: .env
+    environment:
+      SUPERSET_ROLE: worker
+    volumes:
+      - ./superset_config.py:/app/pythonpath/superset_config.py
+      - superset_home:/app/superset_home
+    networks:
+      - production
+    depends_on:
+      superset-db:
+        condition: service_healthy
+      superset-redis:
+        condition: service_healthy
+
+  superset-beat:
+    healthcheck:
+      disable: true
+    build: .
+    container_name: superset_beat
+    restart: always
+    env_file: .env
+    environment:
+      SUPERSET_ROLE: beat
+    volumes:
+      - ./superset_config.py:/app/pythonpath/superset_config.py
+      - superset_home:/app/superset_home
+    networks:
+      - production
+    depends_on:
+      superset-db:
+        condition: service_healthy
+      superset-redis:
+        condition: service_healthy
 
   superset-db:
     image: postgres:15
     container_name: superset_db
     restart: always
+    env_file: .env
+    # command: postgres -c 'max_connections=50' -c 'shared_buffers=256MB'
     environment:
       POSTGRES_DB: superset
       POSTGRES_USER: superset
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    networks:
-      - production
     volumes:
       - superset_db_data:/var/lib/postgresql/data
+    networks:
+      - production
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U superset -d superset"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
   superset-redis:
     image: redis:7
@@ -35,6 +85,11 @@ services:
     restart: always
     networks:
       - production
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
 networks:
   production:
@@ -42,3 +97,4 @@ networks:
 
 volumes:
   superset_db_data:
+  superset_home:
